@@ -52,8 +52,9 @@ class AuthUtils {
             await SharedPrefs.saveEmail(user.email);
             await SharedPrefs.saveRole(user.roleId);
           } else {
-            if (kDebugMode)
+            if (kDebugMode) {
               print('⚠️ Field "user" tidak ditemukan di response user.');
+            }
           }
         } else {
           if (kDebugMode) print('⚠️ Gagal mengambil data user.');
