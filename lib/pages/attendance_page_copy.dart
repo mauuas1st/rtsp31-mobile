@@ -197,16 +197,15 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
       final List data = jsonResponse['data'] ?? [];
       final today = DateTime.now();
 
-      final todayAttendance =
-          data.where((item) {
-            final createdAt = item['created_at'];
-            if (createdAt == null) return false;
+      final todayAttendance = data.where((item) {
+        final createdAt = item['created_at'];
+        if (createdAt == null) return false;
 
-            final created = DateTime.parse(createdAt).toLocal();
-            return created.year == today.year &&
-                created.month == today.month &&
-                created.day == today.day;
-          }).toList();
+        final created = DateTime.parse(createdAt).toLocal();
+        return created.year == today.year &&
+            created.month == today.month &&
+            created.day == today.day;
+      }).toList();
 
       if (todayAttendance.isEmpty) {
         // Belum presensi sama sekali hari ini
@@ -312,10 +311,10 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
         "check_in_map_link":
             'https://www.google.com/maps?q=$_latitude,$_longitude',
         "project_name": "Test Project",
-        "heavy_equipment_id": _idhe?.toString() ?? '',
+        "heavy_equipment_id": 'Zoiddsss', //_idhe?.toString() ?? '',
         "check_in_note": _description,
-        "loading_location": _loadinglocation,
-        "unloading_location": _unloadinglocation,
+        "loading_location": 'Mekahhhh ya mas', //_loadinglocation,
+        "unloading_location": 'Madinah ya masss', // _unloadinglocation,
       } else ...{
         "check_out_time": time,
         "latitude_out": _latitude?.toString() ?? '',
@@ -638,36 +637,35 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
           child: SizedBox(
             width: double.infinity,
-            child:
-                _isSubmitting
-                    ? const Center(
-                      child: SizedBox(
-                        width: 32,
-                        height: 32,
-                        child: CircularProgressIndicator(strokeWidth: 3),
+            child: _isSubmitting
+                ? const Center(
+                    child: SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: CircularProgressIndicator(strokeWidth: 3),
+                    ),
+                  )
+                : ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.colorPrimary,
+                      foregroundColor: Colors.white,
+                      elevation: 2,
+                      side: const BorderSide(color: Colors.grey),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
                       ),
-                    )
-                    : ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.colorPrimary,
-                        foregroundColor: Colors.white,
-                        elevation: 2,
-                        side: const BorderSide(color: Colors.grey),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      onPressed: _submitAttendance,
-                      // icon: const Icon(Icons.send, color: Colors.white),
-                      label: Text(
-                        labelbtn!,
-                        style: TextStyle(color: Colors.white),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
+                    onPressed: _submitAttendance,
+                    // icon: const Icon(Icons.send, color: Colors.white),
+                    label: Text(
+                      labelbtn!,
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
           ),
         ),
       ),
