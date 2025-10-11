@@ -48,6 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final isValid = await AuthUtils.checkToken(token);
       if (isValid) {
         Navigator.pushReplacement(
+          // ignore: use_build_context_synchronously
           context,
           MaterialPageRoute(builder: (_) => const BottomNavBar()),
         );
