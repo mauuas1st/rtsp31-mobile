@@ -75,7 +75,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
           },
           children: [
             const KeepAlivePage(child: PresensiHistori()),
-            const KeepAlivePage(child: AbsenAndMaps()),
+            // const KeepAlivePage(child: AbsenAndMaps()),
             // const KeepAlivePage(child: HeavyEquipmentPage()),
             // const KeepAlivePage(child: FormAbsenPage(title: 'Test')),
             // const KeepAlivePage(child: NotifPage()),
@@ -107,11 +107,11 @@ final _navBarItems = [
     title: const Text("Presensi"),
     selectedColor: AppColors.colorPrimary,
   ),
-  SalomonBottomBarItem(
-    icon: const Icon(Icons.gps_fixed_sharp),
-    title: const Text("Gps"),
-    selectedColor: AppColors.colorPrimary,
-  ),
+  // SalomonBottomBarItem(
+  //   icon: const Icon(Icons.gps_fixed_sharp),
+  //   title: const Text("Gps"),
+  //   selectedColor: AppColors.colorPrimary,
+  // ),
   // SalomonBottomBarItem(
   //   icon: const Icon(Icons.car_rental),
   //   title: const Text("Kendaraan"),
