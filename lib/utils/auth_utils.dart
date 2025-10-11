@@ -71,6 +71,11 @@ class AuthUtils {
     }
   }
 
+  static Future<bool> checkToken(String token) async {
+    // optional: cek token ke server (atau return true saja)
+    return token.isNotEmpty;
+  }
+
   /// 🔹 Logout user dari server dan hapus data lokal
   static Future<bool> logout(String token) async {
     try {
