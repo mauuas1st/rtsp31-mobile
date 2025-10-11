@@ -208,49 +208,32 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
                 created.day == today.day;
           }).toList();
 
-      debugPrint("Total data di API: ${data.length}");
-      debugPrint("Data hari ini: ${todayAttendance.length}");
-
       if (todayAttendance.isEmpty) {
-        _shiftMessage = 'Siap melakukan ritase 1 ?';
-        labelbtn = 'Mulai';
-        _nextShift = 1;
+        // Belum presensi sama sekali hari ini
         _isCheckIn = true;
+        _shiftMessage = "Siap melakukan presensi hari ini?";
+        labelbtn = "Presensi Masuk";
       } else {
+        // Sudah ada presensi hari ini
         todayAttendance.sort(
           (a, b) => DateTime.parse(
             b['created_at'],
           ).compareTo(DateTime.parse(a['created_at'])),
         );
         final latest = todayAttendance.first;
-        final latestDate = DateTime.parse(latest['created_at']).toLocal();
 
-        if (latestDate.year != today.year ||
-            latestDate.month != today.month ||
-            latestDate.day != today.day) {
-          _shiftMessage = 'Siap melakukan ritase 1 hari ini ?';
-          labelbtn = 'Mulai';
-          _nextShift = 1;
-          _isCheckIn = true;
+        if (latest['check_out_time'] == null) {
+          // Sudah presensi masuk, tapi belum presensi keluar
+          _isCheckIn = false;
+          _lastAttendanceId = latest['id'];
+          _shiftMessage =
+              "Anda sudah presensi masuk.\nSelesaikan presensi hari ini?";
+          labelbtn = "Presensi Selesai";
         } else {
-          _nextShift = latest['shift'];
-          _loadinglocation = latest['loading_location'];
-          _unloadinglocation = latest['unloading_location'];
-
-          if (latest['check_out_time'] == null) {
-            _isCheckIn = false;
-            _lastAttendanceId = latest['id'];
-            _shiftMessage = 'Ritase $_nextShift dalam proses...!';
-            labelbtn = 'Selesai';
-
-            _loadingLocationController.text = _loadinglocation;
-            _unloadingLocationController.text = _unloadinglocation;
-          } else {
-            _isCheckIn = true;
-            _nextShift += 1;
-            _shiftMessage = 'Lanjut ritase $_nextShift ?';
-            labelbtn = 'Mulai';
-          }
+          // Sudah presensi masuk dan keluar hari ini
+          _isCheckIn = true;
+          _shiftMessage = "Anda sudah menyelesaikan presensi hari ini.";
+          labelbtn = "Selesai";
         }
       }
 
@@ -397,10 +380,7 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
 
   @override
   Widget build(BuildContext context) {
-    final String message =
-        _shiftMessage != null && _shiftMessage!.isNotEmpty
-            ? _shiftMessage!
-            : "kamu belum terhubung";
+    final String message = _shiftMessage ?? "Siap melakukan presensi hari ini?";
 
     return SafeArea(
       child: Scaffold(
@@ -445,7 +425,7 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: buildPhotoBox(
-                              "Foto Kendaraan",
+                              "Foto Sekitar",
                               _toolPhoto,
                               () => _pickImage(false),
                             ),
@@ -565,7 +545,8 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
                         ),
                       ),
                     ),
-                    sizedBH(2),
+
+                    /*      sizedBH(2),
 
                     buildCard(
                       Center(
@@ -624,8 +605,7 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
                           ],
                         ),
                       ),
-                    ),
-
+                    ), */
                     sizedBH(2),
 
                     buildCard(
@@ -682,7 +662,7 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
                         ),
                       ),
                       onPressed: _submitAttendance,
-                      icon: const Icon(Icons.send, color: Colors.white),
+                      // icon: const Icon(Icons.send, color: Colors.white),
                       label: Text(
                         labelbtn!,
                         style: TextStyle(color: Colors.white),
