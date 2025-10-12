@@ -11,7 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:rtsp31_mobile/constants/app_color.dart';
-import 'package:rtsp31_mobile/pages/heavy_equipment.dart';
+// import 'package:rtsp31_mobile/pages/heavy_equipment.dart';
 // import 'package:rtsp31_mobile/pages/qr_scanner_page.dart';
 import 'package:rtsp31_mobile/utils/shared_prefs.dart';
 import 'package:rtsp31_mobile/widget/build_card.dart';
@@ -197,15 +197,16 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
       final List data = jsonResponse['data'] ?? [];
       final today = DateTime.now();
 
-      final todayAttendance = data.where((item) {
-        final createdAt = item['created_at'];
-        if (createdAt == null) return false;
+      final todayAttendance =
+          data.where((item) {
+            final createdAt = item['created_at'];
+            if (createdAt == null) return false;
 
-        final created = DateTime.parse(createdAt).toLocal();
-        return created.year == today.year &&
-            created.month == today.month &&
-            created.day == today.day;
-      }).toList();
+            final created = DateTime.parse(createdAt).toLocal();
+            return created.year == today.year &&
+                created.month == today.month &&
+                created.day == today.day;
+          }).toList();
 
       if (todayAttendance.isEmpty) {
         // Belum presensi sama sekali hari ini
@@ -290,8 +291,8 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
     request.headers['Authorization'] = 'Bearer $token';
     request.headers['Accept'] = 'application/json';
 
-    final now = DateTime.now();
-    final time = "${now.hour}:${now.minute}:${now.second}";
+    // final now = DateTime.now();
+    // final time = "${now.hour}:${now.minute}:${now.second}";
 
     if (!_isCheckIn) {
       request.fields['_method'] = 'PUT';
@@ -299,7 +300,7 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
 
     request.fields.addAll({
       if (_isCheckIn) ...{
-        "check_in_time": time,
+        // "check_in_time": time,
         "work_location": "site",
         /* 'office' → bekerja di kantor
         'wfh' → work from home
@@ -316,7 +317,7 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
         "loading_location": 'Mekahhhh ya mas', //_loadinglocation,
         "unloading_location": 'Madinah ya masss', // _unloadinglocation,
       } else ...{
-        "check_out_time": time,
+        // "check_out_time": time,
         "latitude_out": _latitude?.toString() ?? '',
         "longitude_out": _longitude?.toString() ?? '',
         "check_out_address": _address,
@@ -637,35 +638,36 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
           child: SizedBox(
             width: double.infinity,
-            child: _isSubmitting
-                ? const Center(
-                    child: SizedBox(
-                      width: 32,
-                      height: 32,
-                      child: CircularProgressIndicator(strokeWidth: 3),
-                    ),
-                  )
-                : ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.colorPrimary,
-                      foregroundColor: Colors.white,
-                      elevation: 2,
-                      side: const BorderSide(color: Colors.grey),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
+            child:
+                _isSubmitting
+                    ? const Center(
+                      child: SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: CircularProgressIndicator(strokeWidth: 3),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                    )
+                    : ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.colorPrimary,
+                        foregroundColor: Colors.white,
+                        elevation: 2,
+                        side: const BorderSide(color: Colors.grey),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: _submitAttendance,
+                      // icon: const Icon(Icons.send, color: Colors.white),
+                      label: Text(
+                        labelbtn!,
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
-                    onPressed: _submitAttendance,
-                    // icon: const Icon(Icons.send, color: Colors.white),
-                    label: Text(
-                      labelbtn!,
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
           ),
         ),
       ),
