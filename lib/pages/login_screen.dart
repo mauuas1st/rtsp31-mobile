@@ -273,24 +273,24 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           Sizebox(),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const BottomNavBar(),
-                                ),
-                              );
-                            },
-                            child: const Text(
-                              'Masuk sebagai Pengunjung',
-                              style: TextStyle(
-                                color: Colors.black54,
-                                fontSize: 13,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                          ),
+                          // TextButton(
+                          //   onPressed: () {
+                          //     Navigator.pushReplacement(
+                          //       context,
+                          //       MaterialPageRoute(
+                          //         builder: (_) => const BottomNavBar(),
+                          //       ),
+                          //     );
+                          //   },
+                          //   child: const Text(
+                          //     'Masuk sebagai Pengunjung',
+                          //     style: TextStyle(
+                          //       color: Colors.black54,
+                          //       fontSize: 13,
+                          //       fontStyle: FontStyle.italic,
+                          //     ),
+                          //   ),
+                          // ),
                         ],
                       ),
                     ),
