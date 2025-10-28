@@ -185,7 +185,7 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
   }
 
   Future<void> _checkTodayAttendance() async {
-    final url = Uri.parse("https://rtsp31.site/api/my-attendances");
+    final url = Uri.parse("http://192.168.18.2:8000/api/v1/my-attendances");
     final token = await SharedPrefs.getToken();
     final response = await http.get(
       url,
@@ -283,8 +283,8 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
     final token = await SharedPrefs.getToken();
     final uri = Uri.parse(
       _isCheckIn
-          ? "https://rtsp31.site/api/my-attendances/check-in"
-          : "https://rtsp31.site/api/my-attendances/check-out",
+          ? "http://192.168.18.2:8000/api/v1/my-attendances/check-in"
+          : "http://192.168.18.2:8000/api/v1/my-attendances/check-out",
     );
 
     final request = http.MultipartRequest('POST', uri);
@@ -336,7 +336,7 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
     );
     request.files.add(
       await http.MultipartFile.fromPath(
-        _isCheckIn ? 'check_in_tool_photo' : 'check_out_tool_photo',
+        _isCheckIn ? 'check_in_arround_photo' : 'check_out_arround_photo',
         _toolPhoto!.path,
       ),
     );

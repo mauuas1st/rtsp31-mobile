@@ -113,8 +113,8 @@ class PresensiModel {
       checkOutNote: json['check_out_note'],
       checkInPhotoPath: json['check_in_photo_path'] ?? '',
       checkOutPhotoPath: json['check_out_photo_path'] ?? '',
-      checkInToolPhotoPath: json['check_in_tool_photo_path'] ?? '',
-      checkOutToolPhotoPath: json['check_out_tool_photo_path'] ?? '',
+      checkInToolPhotoPath: json['check_in_arround_photo_path'] ?? '',
+      checkOutToolPhotoPath: json['check_out_arround_photo_path'] ?? '',
       heavyEquipmentId: json['heavy_equipment_id'] ?? '',
       projectName: json['project_name'] ?? '',
       createdAt:
