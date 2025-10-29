@@ -121,83 +121,107 @@ Widget buildRiwayatList({
             ),
           ),
           const SizedBox(height: 8),
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.5,
-            child: ListView.builder(
-              controller: scrollController,
-              itemCount: attendances.length + (isLoading ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == attendances.length) {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: CircularProgressIndicator(),
+
+          // ✅ kalau belum ada data, tampilkan placeholder
+          if (attendances.isEmpty && !isLoading)
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.3,
+              child: const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.history, size: 48, color: Colors.grey),
+                    SizedBox(height: 12),
+                    Text(
+                      "Belum ada kehadiran",
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.5,
+              child: ListView.builder(
+                controller: scrollController,
+                itemCount: attendances.length + (isLoading ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index == attendances.length) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+                  }
+
+                  final item = attendances[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade300,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              item.workLocation,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            "Mulai: ${item.checkInTime != null ? DateFormat('HH:mm').format(item.checkInTime!) : "-"} WIB",
+                          ),
+                          Text(
+                            "Selesai: ${item.checkOutTime != null ? DateFormat('HH:mm').format(item.checkOutTime!) : "-"} WIB",
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Text(
+                                '${item.employeeId} - ',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              Text(
+                                DateFormat(
+                                  'dd MMMM yyyy',
+                                ).format(item.checkInTime!),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   );
-                }
-
-                final item = attendances[index];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade300,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            item.workLocation,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "Mulai: ${item.checkInTime != null ? DateFormat('HH:mm').format(item.checkInTime!) : "-"} WIB",
-                        ),
-                        Text(
-                          "Selesai: ${item.checkOutTime != null ? DateFormat('HH:mm').format(item.checkOutTime!) : "-"} WIB",
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Text(
-                              '${item.employeeId} - ',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            Text(
-                              DateFormat(
-                                'dd MMMM yyyy',
-                              ).format(item.checkInTime!),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+                },
+              ),
             ),
-          ),
         ],
       ),
     ),

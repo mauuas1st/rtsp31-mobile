@@ -47,7 +47,7 @@ class _PresensiHistoriState extends State<PresensiHistori> {
 
     final response = await http.get(
       Uri.parse(
-        'http://192.168.18.14:8000/api/v1/my-attendances/today?page=$currentPage',
+        'http://192.168.18.2:8000/api/v1/my-attendances/today?page=$currentPage',
       ),
       headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
     );
@@ -159,10 +159,9 @@ class _PresensiHistoriState extends State<PresensiHistori> {
                 // ✅ jika tidak ada data = gunakan topCard kosong
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child:
-                      firstItem != null
-                          ? buildTopCard(context, firstItem)
-                          : buildTodayTopCard(),
+                  child: firstItem != null
+                      ? buildTopCard(context, firstItem)
+                      : buildTodayTopCard(),
                 ),
 
                 const SizedBox(height: 25),
