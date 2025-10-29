@@ -35,7 +35,7 @@ Widget buildTopCard(BuildContext context, PresensiModel firstItem) {
             children: [
               const SizedBox(height: 14),
               Text(
-                DateFormat('dd MMMM yyyy').format(firstItem.createdAt!),
+                DateFormat('dd MMMM yyyy').format(firstItem.checkInTime!),
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -183,7 +183,7 @@ Widget buildRiwayatList({
                             Text(
                               DateFormat(
                                 'dd MMMM yyyy',
-                              ).format(item.createdAt!),
+                              ).format(item.checkInTime!),
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey,

@@ -1,13 +1,11 @@
-// ignore: unnecessary_import
-// import 'package:flutter/services.dart';
-// import 'package:intl/intl.dart';
-// import 'package:rtsp31_mobile/constants/app_color.dart';
-// import 'package:rtsp31_mobile/pages/absensi_lokasi_maps.dart';
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+
+import 'package:rtsp31_mobile/constants/app_color.dart';
 import 'package:rtsp31_mobile/models/presensi.dart';
+import 'package:rtsp31_mobile/pages/attendance_page_copy.dart';
 import 'package:rtsp31_mobile/utils/shared_prefs.dart';
 import 'package:rtsp31_mobile/widget/widget_presensi.dart';
 import 'package:rtsp31_mobile/widget/widget_styles.dart';
@@ -23,7 +21,6 @@ class _PresensiHistoriState extends State<PresensiHistori> {
   final ScrollController _scrollController = ScrollController();
 
   List<PresensiModel> attendances = [];
-
   int currentPage = 1;
   bool hasMore = true;
   bool isLoading = false;
@@ -34,7 +31,6 @@ class _PresensiHistoriState extends State<PresensiHistori> {
     fetchData();
 
     _scrollController.addListener(() {
-      // Trigger ketika hampir mentok scroll & masih ada halaman berikutnya
       if (_scrollController.position.pixels >=
               _scrollController.position.maxScrollExtent - 120 &&
           !isLoading &&
@@ -61,26 +57,21 @@ class _PresensiHistoriState extends State<PresensiHistori> {
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
 
-      // 1) Tambah data baru
-      final List<dynamic> raw = body['data'] as List<dynamic>;
-      final newItems = raw.map(
-        (e) => PresensiModel.fromJson(e as Map<String, dynamic>),
+      final List<dynamic> raw = body['data'];
+      attendances.addAll(
+        raw.map((e) => PresensiModel.fromJson(e as Map<String, dynamic>)),
       );
 
-      setState(() => attendances.addAll(newItems));
-
-      // 2) Cek apakah masih ada halaman selanjutnya
-      final String? nextUrl = body['links']?['next'];
-      //  –atau– pakai meta:
-      final int cur = body['meta']?['current_page'] ?? currentPage;
-      final int last = body['meta']?['last_page'] ?? cur;
+      final meta = body['meta'];
+      final cur = meta?['current_page'] ?? currentPage;
+      final last = meta?['last_page'] ?? cur;
+      final nextUrl = body['links']?['next'];
 
       setState(() {
         hasMore = nextUrl != null && cur < last;
-        if (hasMore) currentPage++; // naikkan page kalau memang ada next
+        if (hasMore) currentPage++;
       });
     } else {
-      // Optional: tampilkan snackbar / dialog kesalahan
       debugPrint('Fetch gagal – ${response.statusCode}');
     }
 
@@ -98,10 +89,8 @@ class _PresensiHistoriState extends State<PresensiHistori> {
 
   @override
   Widget build(BuildContext context) {
-    PresensiModel? firstItem;
-    if (attendances.isNotEmpty) {
-      firstItem = attendances[0];
-    }
+    final now = DateTime.now();
+    final firstItem = attendances.isNotEmpty ? attendances.first : null;
 
     return SafeArea(
       child: Scaffold(
@@ -110,24 +99,16 @@ class _PresensiHistoriState extends State<PresensiHistori> {
           onRefresh: refreshData,
           child:
               attendances.isEmpty && !isLoading
-                  ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.info_outline, size: 48, color: Colors.grey),
-                        SizedBox(height: 16),
-                        Text("Data presensi tidak tersedia"),
-                      ],
-                    ),
-                  )
+                  ? _buildEmptyView(now)
                   : SingleChildScrollView(
+                    controller: _scrollController,
                     child: Column(
                       children: [
                         const SizedBox(height: 16),
-                        if (attendances.isNotEmpty)
+                        if (firstItem != null)
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: buildTopCard(context, firstItem!),
+                            child: buildTopCard(context, firstItem),
                           ),
                         const SizedBox(height: 25),
                         buildRiwayatList(
@@ -141,6 +122,63 @@ class _PresensiHistoriState extends State<PresensiHistori> {
                     ),
                   ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyView(DateTime now) {
+    return Center(
+      child: Column(
+        children: [
+          const SizedBox(height: 14),
+          Text(
+            DateFormat('dd MMMM yyyy').format(now),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            '00:00 - 00:00',
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          const Text('Total Jam Kerja : -', style: TextStyle(fontSize: 14)),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: 250,
+            child: Card(
+              color: AppColors.colorPrimary,
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: ListTile(
+                title: const Text(
+                  "Tugas",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const AttendancePageCopy(),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          const Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.info_outline, size: 48, color: Colors.grey),
+              SizedBox(height: 16),
+              Text("Data presensi tidak tersedia"),
+            ],
+          ),
+        ],
       ),
     );
   }
