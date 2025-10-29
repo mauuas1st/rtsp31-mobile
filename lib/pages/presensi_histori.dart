@@ -53,7 +53,7 @@ class _PresensiHistoriState extends State<PresensiHistori> {
 
     final response = await http.get(
       Uri.parse(
-        'http://192.168.18.2:8000/api/v1/my-attendances?page=$currentPage',
+        'http://192.168.100.2:8000/api/v1/my-attendances?page=$currentPage',
       ),
       headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
     );
@@ -108,37 +108,38 @@ class _PresensiHistoriState extends State<PresensiHistori> {
         backgroundColor: Colors.grey[100],
         body: RefreshIndicator(
           onRefresh: refreshData,
-          child: attendances.isEmpty && !isLoading
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(Icons.info_outline, size: 48, color: Colors.grey),
-                      SizedBox(height: 16),
-                      Text("Data presensi tidak tersedia"),
-                    ],
-                  ),
-                )
-              : SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 16),
-                      if (attendances.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: buildTopCard(context, firstItem!),
+          child:
+              attendances.isEmpty && !isLoading
+                  ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.info_outline, size: 48, color: Colors.grey),
+                        SizedBox(height: 16),
+                        Text("Data presensi tidak tersedia"),
+                      ],
+                    ),
+                  )
+                  : SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 16),
+                        if (attendances.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: buildTopCard(context, firstItem!),
+                          ),
+                        const SizedBox(height: 25),
+                        buildRiwayatList(
+                          context: context,
+                          attendances: attendances,
+                          scrollController: _scrollController,
+                          isLoading: isLoading,
                         ),
-                      const SizedBox(height: 25),
-                      buildRiwayatList(
-                        context: context,
-                        attendances: attendances,
-                        scrollController: _scrollController,
-                        isLoading: isLoading,
-                      ),
-                      sizedBH(50),
-                    ],
+                        sizedBH(50),
+                      ],
+                    ),
                   ),
-                ),
         ),
       ),
     );

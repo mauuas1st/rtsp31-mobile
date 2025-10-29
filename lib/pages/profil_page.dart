@@ -52,7 +52,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     radius: 60,
                     backgroundImage: NetworkImage(
                       'https://i.pravatar.cc',
-                      // 'http://192.168.18.2:8000/storage/foto/${user.photo}',
+                      // 'http://192.168.100.2:8000/storage/foto/${user.photo}',
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -85,20 +85,23 @@ class _ProfilePageState extends State<ProfilePage> {
                       onTap: () async {
                         final confirm = await showDialog<bool>(
                           context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Konfirmasi'),
-                            content: const Text('Yakin ingin logout?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Batal'),
+                          builder:
+                              (context) => AlertDialog(
+                                title: const Text('Konfirmasi'),
+                                content: const Text('Yakin ingin logout?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed:
+                                        () => Navigator.pop(context, false),
+                                    child: const Text('Batal'),
+                                  ),
+                                  TextButton(
+                                    onPressed:
+                                        () => Navigator.pop(context, true),
+                                    child: const Text('Logout'),
+                                  ),
+                                ],
                               ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text('Logout'),
-                              ),
-                            ],
-                          ),
                         );
 
                         if (confirm ?? false) {
