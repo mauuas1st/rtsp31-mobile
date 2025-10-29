@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-
 import 'package:rtsp31_mobile/constants/app_color.dart';
 import 'package:rtsp31_mobile/models/presensi.dart';
 import 'package:rtsp31_mobile/pages/attendance_page_copy.dart';
@@ -42,14 +41,13 @@ class _PresensiHistoriState extends State<PresensiHistori> {
 
   Future<void> fetchData() async {
     if (isLoading || !hasMore) return;
-
     setState(() => isLoading = true);
 
     final token = await SharedPrefs.getToken();
 
     final response = await http.get(
       Uri.parse(
-        'http://192.168.100.2:8000/api/v1/my-attendances?page=$currentPage',
+        'http://192.168.18.14:8000/api/v1/my-attendances/today?page=$currentPage',
       ),
       headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
     );
@@ -57,9 +55,8 @@ class _PresensiHistoriState extends State<PresensiHistori> {
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
 
-      final List<dynamic> raw = body['data'];
       attendances.addAll(
-        raw.map((e) => PresensiModel.fromJson(e as Map<String, dynamic>)),
+        (body['data'] as List).map((e) => PresensiModel.fromJson(e)).toList(),
       );
 
       final meta = body['meta'];
@@ -71,8 +68,6 @@ class _PresensiHistoriState extends State<PresensiHistori> {
         hasMore = nextUrl != null && cur < last;
         if (hasMore) currentPage++;
       });
-    } else {
-      debugPrint('Fetch gagal – ${response.statusCode}');
     }
 
     setState(() => isLoading = false);
@@ -87,98 +82,105 @@ class _PresensiHistoriState extends State<PresensiHistori> {
     await fetchData();
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget buildTodayTopCard() {
     final now = DateTime.now();
-    final firstItem = attendances.isNotEmpty ? attendances.first : null;
 
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: Colors.grey[100],
-        body: RefreshIndicator(
-          onRefresh: refreshData,
-          child:
-              attendances.isEmpty && !isLoading
-                  ? _buildEmptyView(now)
-                  : SingleChildScrollView(
-                    controller: _scrollController,
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 16),
-                        if (firstItem != null)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: buildTopCard(context, firstItem),
-                          ),
-                        const SizedBox(height: 25),
-                        buildRiwayatList(
-                          context: context,
-                          attendances: attendances,
-                          scrollController: _scrollController,
-                          isLoading: isLoading,
-                        ),
-                        sizedBH(50),
-                      ],
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
+        ],
+      ),
+      child: Center(
+        child: Column(
+          children: [
+            Text(
+              DateFormat('dd MMMM yyyy').format(now),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              '00:00 - 00:00',
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            const Text('Total Jam Kerja : -'),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: 250,
+              child: Card(
+                color: AppColors.colorPrimary,
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: ListTile(
+                  title: const Text(
+                    "Tugas",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
+                    textAlign: TextAlign.center,
                   ),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const AttendancePageCopy(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildEmptyView(DateTime now) {
-    return Center(
-      child: Column(
-        children: [
-          const SizedBox(height: 14),
-          Text(
-            DateFormat('dd MMMM yyyy').format(now),
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            '00:00 - 00:00',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          const Text('Total Jam Kerja : -', style: TextStyle(fontSize: 14)),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: 250,
-            child: Card(
-              color: AppColors.colorPrimary,
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: ListTile(
-                title: const Text(
-                  "Tugas",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
+  @override
+  Widget build(BuildContext context) {
+    final firstItem = attendances.isNotEmpty ? attendances.first : null;
+
+    return SafeArea(
+      child: Scaffold(
+        body: RefreshIndicator(
+          onRefresh: refreshData,
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            child: Column(
+              children: [
+                const SizedBox(height: 16),
+
+                // ✅ jika tidak ada data = gunakan topCard kosong
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child:
+                      firstItem != null
+                          ? buildTopCard(context, firstItem)
+                          : buildTodayTopCard(),
                 ),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const AttendancePageCopy(),
-                    ),
-                  );
-                },
-              ),
+
+                const SizedBox(height: 25),
+
+                // ✅ Riwayat List - kondisi kosong ditangani di dalam widget
+                buildRiwayatList(
+                  context: context,
+                  attendances: attendances,
+                  scrollController: _scrollController,
+                  isLoading: isLoading,
+                ),
+
+                sizedBH(50),
+              ],
             ),
           ),
-          const Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.info_outline, size: 48, color: Colors.grey),
-              SizedBox(height: 16),
-              Text("Data presensi tidak tersedia"),
-            ],
-          ),
-        ],
+        ),
+        backgroundColor: Colors.grey[100],
       ),
     );
   }

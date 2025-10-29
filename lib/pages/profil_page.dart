@@ -52,7 +52,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     radius: 60,
                     backgroundImage: NetworkImage(
                       'https://i.pravatar.cc',
-                      // 'http://192.168.100.2:8000/storage/foto/${user.photo}',
+                      // 'http://192.168.18.14:8000/storage/foto/${user.photo}',
                     ),
                   ),
                   const SizedBox(height: 20),
