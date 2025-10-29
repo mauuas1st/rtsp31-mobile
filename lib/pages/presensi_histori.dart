@@ -152,6 +152,7 @@ class _PresensiHistoriState extends State<PresensiHistori> {
           onRefresh: refreshData,
           child: SingleChildScrollView(
             controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
               children: [
                 const SizedBox(height: 16),
@@ -159,9 +160,10 @@ class _PresensiHistoriState extends State<PresensiHistori> {
                 // ✅ jika tidak ada data = gunakan topCard kosong
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: firstItem != null
-                      ? buildTopCard(context, firstItem)
-                      : buildTodayTopCard(),
+                  child:
+                      firstItem != null
+                          ? buildTopCard(context, firstItem)
+                          : buildTodayTopCard(),
                 ),
 
                 const SizedBox(height: 25),

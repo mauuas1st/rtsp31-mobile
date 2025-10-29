@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:rtsp31_mobile/constants/app_color.dart';
 import 'package:rtsp31_mobile/models/presensi.dart';
-// import 'package:rtsp31_mobile/pages/absensi_lokasi_maps.dart';
 import 'package:rtsp31_mobile/pages/attendance_page_copy.dart';
 
 Widget buildTopCard(BuildContext context, PresensiModel firstItem) {
@@ -97,6 +96,19 @@ Widget buildRiwayatList({
   required ScrollController scrollController,
   required bool isLoading,
 }) {
+  double historyHeight = MediaQuery.of(context).size.height * 0.5;
+
+  int itemCount = 0;
+  bool isInitialLoading = attendances.isEmpty && isLoading;
+
+  if (isInitialLoading) {
+    // FULL SKELETON LIST (loading awal)
+    itemCount = 6;
+  } else {
+    // Tambahkan 3 skeleton di bawah data saat load more
+    itemCount = attendances.length + (isLoading ? 3 : 0);
+  }
+
   return Padding(
     padding: const EdgeInsets.symmetric(horizontal: 16),
     child: Container(
@@ -122,10 +134,9 @@ Widget buildRiwayatList({
           ),
           const SizedBox(height: 8),
 
-          // ✅ kalau belum ada data, tampilkan placeholder
-          if (attendances.isEmpty && !isLoading)
+          if (!isLoading && attendances.isEmpty)
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.3,
+              height: historyHeight,
               child: const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -146,16 +157,55 @@ Widget buildRiwayatList({
             )
           else
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.5,
+              height: historyHeight,
               child: ListView.builder(
                 controller: scrollController,
-                itemCount: attendances.length + (isLoading ? 1 : 0),
+                itemCount: itemCount,
                 itemBuilder: (context, index) {
-                  if (index == attendances.length) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: CircularProgressIndicator(),
+                  bool isSkeleton =
+                      (isInitialLoading) ||
+                      (index >= attendances.length && isLoading);
+
+                  if (isSkeleton) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 100,
+                              height: 14,
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade300,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Container(
+                              width: double.infinity,
+                              height: 14,
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade300,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Container(
+                              width: 140,
+                              height: 14,
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade300,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   }

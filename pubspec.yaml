@@ -53,6 +53,7 @@ dependencies:
   intl: ^0.20.2
   mobile_scanner: ^7.0.1
   flutter_image_compress: ^2.4.0
+  shimmer: ^3.0.0
 
 # Ini adalah isi launch_background.xml custom
 # <?xml version="1.0" encoding="utf-8"?>
