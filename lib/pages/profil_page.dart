@@ -106,7 +106,19 @@ class _ProfilePageState extends State<ProfilePage> {
                           );
 
                           if (confirm ?? false) {
+                            final token = await SharedPrefs.getToken();
+
+                            // Jika data user ada dan token ada, panggil API logout
+                            if (snapshot.hasData &&
+                                snapshot.data != null &&
+                                token != null) {
+                              await AuthUtils.logout(token);
+                            }
+
+                            // Hapus semua SharedPreferences
                             await SharedPrefs.clearAll();
+
+                            // Kembali ke LoginScreen
                             if (context.mounted) {
                               Navigator.pushReplacement(
                                 context,
