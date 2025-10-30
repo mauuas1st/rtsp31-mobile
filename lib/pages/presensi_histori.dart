@@ -47,7 +47,7 @@ class _PresensiHistoriState extends State<PresensiHistori> {
 
     final response = await http.get(
       Uri.parse(
-        'http://192.168.18.2:8000/api/v1/my-attendances/today?page=$currentPage',
+        'http://192.168.100.251:8000/api/v1/my-attendances/today?page=$currentPage',
       ),
       headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
     );

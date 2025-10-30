@@ -186,7 +186,7 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
 
   Future<void> _checkTodayAttendance() async {
     final url = Uri.parse(
-      "http://192.168.18.2:8000/api/v1/my-attendances/today",
+      "http://192.168.100.251:8000/api/v1/my-attendances/today",
     );
     final token = await SharedPrefs.getToken();
     final response = await http.get(
@@ -199,15 +199,16 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
       final List data = jsonResponse['data'] ?? [];
       final today = DateTime.now();
 
-      final todayAttendance = data.where((item) {
-        final createdAt = item['created_at'];
-        if (createdAt == null) return false;
+      final todayAttendance =
+          data.where((item) {
+            final createdAt = item['created_at'];
+            if (createdAt == null) return false;
 
-        final created = DateTime.parse(createdAt).toLocal();
-        return created.year == today.year &&
-            created.month == today.month &&
-            created.day == today.day;
-      }).toList();
+            final created = DateTime.parse(createdAt).toLocal();
+            return created.year == today.year &&
+                created.month == today.month &&
+                created.day == today.day;
+          }).toList();
 
       if (todayAttendance.isEmpty) {
         // Belum presensi sama sekali hari ini
@@ -284,8 +285,8 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
     final token = await SharedPrefs.getToken();
     final uri = Uri.parse(
       _isCheckIn
-          ? "http://192.168.18.2:8000/api/v1/my-attendances/check-in"
-          : "http://192.168.18.2:8000/api/v1/my-attendances/check-out",
+          ? "http://192.168.100.251:8000/api/v1/my-attendances/check-in"
+          : "http://192.168.100.251:8000/api/v1/my-attendances/check-out",
     );
 
     final request = http.MultipartRequest('POST', uri);
@@ -639,35 +640,36 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
           child: SizedBox(
             width: double.infinity,
-            child: _isSubmitting
-                ? const Center(
-                    child: SizedBox(
-                      width: 32,
-                      height: 32,
-                      child: CircularProgressIndicator(strokeWidth: 3),
-                    ),
-                  )
-                : ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.colorPrimary,
-                      foregroundColor: Colors.white,
-                      elevation: 2,
-                      side: const BorderSide(color: Colors.grey),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
+            child:
+                _isSubmitting
+                    ? const Center(
+                      child: SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: CircularProgressIndicator(strokeWidth: 3),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                    )
+                    : ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.colorPrimary,
+                        foregroundColor: Colors.white,
+                        elevation: 2,
+                        side: const BorderSide(color: Colors.grey),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: _submitAttendance,
+                      // icon: const Icon(Icons.send, color: Colors.white),
+                      label: Text(
+                        labelbtn!,
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
-                    onPressed: _submitAttendance,
-                    // icon: const Icon(Icons.send, color: Colors.white),
-                    label: Text(
-                      labelbtn!,
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
           ),
         ),
       ),
