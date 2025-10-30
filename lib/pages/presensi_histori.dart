@@ -6,8 +6,6 @@ import 'package:rtsp31_mobile/constants/app_color.dart';
 import 'package:rtsp31_mobile/models/presensi.dart';
 import 'package:rtsp31_mobile/pages/attendance_page_copy.dart';
 import 'package:rtsp31_mobile/utils/shared_prefs.dart';
-import 'package:rtsp31_mobile/widget/widget_presensi.dart';
-import 'package:rtsp31_mobile/widget/widget_styles.dart';
 
 class PresensiHistori extends StatefulWidget {
   const PresensiHistori({super.key});
@@ -17,60 +15,87 @@ class PresensiHistori extends StatefulWidget {
 }
 
 class _PresensiHistoriState extends State<PresensiHistori> {
-  final ScrollController _scrollController = ScrollController();
-
+  PresensiModel? firstItem;
   List<PresensiModel> attendances = [];
   int currentPage = 1;
   bool hasMore = true;
   bool isLoading = false;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    fetchData();
+    fetchFirstAttendance();
+    fetchAttendances();
 
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
               _scrollController.position.maxScrollExtent - 120 &&
           !isLoading &&
           hasMore) {
-        fetchData();
+        fetchAttendances();
       }
     });
   }
 
-  Future<void> fetchData() async {
-    if (isLoading || !hasMore) return;
-    setState(() => isLoading = true);
-
+  Future<void> fetchFirstAttendance() async {
     final token = await SharedPrefs.getToken();
-
     final response = await http.get(
       Uri.parse(
-        'http://192.168.100.251:8000/api/v1/my-attendances/today?page=$currentPage',
+        'http://192.168.100.251:8000/api/v1/my-attendances/today?page=1',
       ),
       headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
     );
 
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
+      final data = body['data'] as List;
+      if (data.isNotEmpty) {
+        setState(() {
+          firstItem = PresensiModel.fromJson(data.first);
+        });
+      }
+    }
+  }
 
-      attendances.addAll(
-        (body['data'] as List).map((e) => PresensiModel.fromJson(e)).toList(),
+  Future<void> fetchAttendances() async {
+    if (isLoading || !hasMore) return;
+
+    setState(() => isLoading = true);
+
+    try {
+      final token = await SharedPrefs.getToken();
+      final response = await http.get(
+        Uri.parse(
+          'http://192.168.100.251:8000/api/v1/my-attendances/today?page=$currentPage',
+        ),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
       );
 
-      final meta = body['meta'];
-      final cur = meta?['current_page'] ?? currentPage;
-      final last = meta?['last_page'] ?? cur;
-      final nextUrl = body['links']?['next'];
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        final meta = body['meta'];
+        final cur = meta?['current_page'] ?? currentPage;
+        final last = meta?['last_page'] ?? cur;
 
-      setState(() {
-        hasMore = nextUrl != null && cur < last;
-        if (hasMore) currentPage++;
-      });
+        setState(() {
+          attendances.addAll(
+            (body['data'] as List)
+                .map((e) => PresensiModel.fromJson(e))
+                .toList(),
+          );
+          hasMore = cur < last;
+          if (hasMore) currentPage++;
+        });
+      }
+    } catch (e) {
+      // tangani exception jika perlu
+    } finally {
+      if (mounted) setState(() => isLoading = false);
     }
-
-    setState(() => isLoading = false);
   }
 
   Future<void> refreshData() async {
@@ -79,60 +104,111 @@ class _PresensiHistoriState extends State<PresensiHistori> {
       currentPage = 1;
       hasMore = true;
     });
-    await fetchData();
+
+    await fetchFirstAttendance();
+    await fetchAttendances();
   }
 
-  Widget buildTodayTopCard() {
-    final now = DateTime.now();
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
-        ],
-      ),
-      child: Center(
-        child: Column(
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: Colors.grey[100],
+        body: Column(
           children: [
-            Text(
-              DateFormat('dd MMMM yyyy').format(now),
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              '00:00 - 00:00',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            const Text('Total Jam Kerja : -'),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: 250,
-              child: Card(
-                color: AppColors.colorPrimary,
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: ListTile(
-                  title: const Text(
-                    "Tugas",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+            // ---------------- Top Card ----------------
+            buildTopCard(context, firstItem),
+
+            const SizedBox(height: 12),
+
+            // ---------------- Riwayat ----------------
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: refreshData,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const AttendancePageCopy(),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Riwayat",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Divider(
+                            color: Colors.grey.shade300,
+                            thickness: 1,
+                            height: 16,
+                          ),
+                          const SizedBox(height: 4),
+                          Expanded(
+                            child: Builder(
+                              builder: (_) {
+                                if (isLoading && attendances.isEmpty) {
+                                  // ---------------- Skeleton awal ----------------
+                                  return ListView.builder(
+                                    itemCount: 6,
+                                    itemBuilder:
+                                        (context, index) => buildSkeletonItem(),
+                                  );
+                                } else if (!isLoading && attendances.isEmpty) {
+                                  // ---------------- Belum ada data ----------------
+                                  return Center(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: const [
+                                        Icon(
+                                          Icons.history,
+                                          size: 48,
+                                          color: Colors.grey,
+                                        ),
+                                        SizedBox(height: 12),
+                                        Text(
+                                          "Belum ada kehadiran",
+                                          style: TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                } else {
+                                  // ---------------- Data ada + infinite scroll ----------------
+                                  return ListView.builder(
+                                    controller: _scrollController,
+                                    itemCount:
+                                        attendances.length +
+                                        (isLoading ? 3 : 0),
+                                    itemBuilder: (context, index) {
+                                      if (index < attendances.length) {
+                                        return buildRiwayatItem(
+                                          attendances[index],
+                                        );
+                                      } else {
+                                        return buildSkeletonItem();
+                                      }
+                                    },
+                                  );
+                                }
+                              },
+                            ),
+                          ),
+                        ],
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -142,47 +218,168 @@ class _PresensiHistoriState extends State<PresensiHistori> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final firstItem = attendances.isNotEmpty ? attendances.first : null;
-
-    return SafeArea(
-      child: Scaffold(
-        body: RefreshIndicator(
-          onRefresh: refreshData,
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              children: [
-                const SizedBox(height: 16),
-
-                // ✅ jika tidak ada data = gunakan topCard kosong
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child:
-                      firstItem != null
-                          ? buildTopCard(context, firstItem)
-                          : buildTodayTopCard(),
+  // ---------------- Riwayat Item ----------------
+  Widget buildRiwayatItem(PresensiModel item) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        elevation: 1,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(6),
                 ),
-
-                const SizedBox(height: 25),
-
-                // ✅ Riwayat List - kondisi kosong ditangani di dalam widget
-                buildRiwayatList(
-                  context: context,
-                  attendances: attendances,
-                  scrollController: _scrollController,
-                  isLoading: isLoading,
+                child: Text(
+                  item.workLocation,
+                  style: const TextStyle(fontSize: 12),
                 ),
-
-                sizedBH(50),
-              ],
-            ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Mulai: ${item.checkInTime != null ? DateFormat('HH:mm').format(item.checkInTime!) : "-"} WIB",
+              ),
+              Text(
+                "Selesai: ${item.checkOutTime != null ? DateFormat('HH:mm').format(item.checkOutTime!) : "-"} WIB",
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Text(
+                    '${item.employeeId} - ',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  if (item.checkInTime != null)
+                    Text(
+                      DateFormat('dd MMMM yyyy').format(item.checkInTime!),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                ],
+              ),
+            ],
           ),
         ),
-        backgroundColor: Colors.grey[100],
       ),
     );
   }
+
+  // ---------------- Skeleton Item ----------------
+  Widget buildSkeletonItem() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        elevation: 0,
+        color: Colors.grey.shade200,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(width: 100, height: 14, color: Colors.grey.shade300),
+              const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                height: 14,
+                color: Colors.grey.shade300,
+              ),
+              const SizedBox(height: 6),
+              Container(width: 140, height: 14, color: Colors.grey.shade300),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------- TopCardWidget ----------------
+Widget buildTopCard(BuildContext context, PresensiModel? firstItem) {
+  final now = DateTime.now();
+  final checkInTime = firstItem?.checkInTime ?? now;
+  final checkOutTime = firstItem?.checkOutTime ?? now;
+
+  String calculateDuration() {
+    if (firstItem?.checkInTime == null || firstItem?.checkOutTime == null) {
+      return '0 jam';
+    }
+    final duration = checkOutTime.difference(checkInTime);
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    return '$hours jam $minutes menit';
+  }
+
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+    child: Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 14),
+              Text(
+                DateFormat('dd MMMM yyyy').format(checkInTime),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${firstItem?.checkInTime != null ? DateFormat('HH:mm').format(checkInTime) : '00:00'} - '
+                '${firstItem?.checkOutTime != null ? DateFormat('HH:mm').format(checkOutTime) : '00:00'}',
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Total Jam Kerja : ${calculateDuration()}',
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: 250,
+                child: Card(
+                  color: AppColors.colorPrimary,
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: ListTile(
+                    title: const Text(
+                      "Tugas",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const AttendancePageCopy(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }
