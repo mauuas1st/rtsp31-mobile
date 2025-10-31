@@ -59,9 +59,15 @@ class AuthUtils {
           'message': body['message'] ?? 'Login berhasil',
         };
       } else {
+        if (response.statusCode == 401 || response.statusCode == 422) {
+          return {
+            'success': false,
+            'message': body['message'] ?? 'Email atau kata sandi salah',
+          };
+        }
         return {
           'success': false,
-          'message': body['message'] ?? 'Email atau kata sandi salah',
+          'message': 'Gagal terhubung ke server. Periksa koneksi Anda.',
         };
       }
     } on SocketException {

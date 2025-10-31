@@ -26,7 +26,7 @@ class _PresensiHistoriState extends State<PresensiHistori> {
   void initState() {
     super.initState();
     fetchFirstAttendance();
-    fetchAttendances();
+    fetchAttendances(isRefresh: true);
 
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
@@ -58,10 +58,12 @@ class _PresensiHistoriState extends State<PresensiHistori> {
     }
   }
 
-  Future<void> fetchAttendances() async {
-    if (isLoading || !hasMore) return;
+  Future<void> fetchAttendances({bool isRefresh = false}) async {
+    if (!isRefresh && (isLoading || !hasMore)) return;
 
-    setState(() => isLoading = true);
+    if (!isRefresh) {
+      setState(() => isLoading = true);
+    }
 
     try {
       final token = await SharedPrefs.getToken();
@@ -103,10 +105,11 @@ class _PresensiHistoriState extends State<PresensiHistori> {
       attendances.clear();
       currentPage = 1;
       hasMore = true;
+      isLoading = true;
     });
 
     await fetchFirstAttendance();
-    await fetchAttendances();
+    await fetchAttendances(isRefresh: true);
   }
 
   @override
