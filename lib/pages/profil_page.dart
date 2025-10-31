@@ -26,6 +26,63 @@ class _ProfilePageState extends State<ProfilePage> {
     return await AuthUtils.fetchUser(token);
   }
 
+  Widget buildSkeletonProfile() {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+
+          // Skeleton Avatar
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              shape: BoxShape.circle,
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Skeleton Nama
+          Container(
+            height: 18,
+            width: 160,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Skeleton Email
+          Container(
+            height: 18,
+            width: 220,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+
+          const SizedBox(height: 40),
+
+          // Skeleton Logout Button
+          Container(
+            height: 60,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -34,109 +91,96 @@ class _ProfilePageState extends State<ProfilePage> {
         body: FutureBuilder<UserModels?>(
           future: _userFuture,
           builder: (context, snapshot) {
-            Widget content;
-
             if (snapshot.connectionState == ConnectionState.waiting) {
-              content = const Center(child: CircularProgressIndicator());
-            } else {
-              final user = snapshot.data;
-
-              content = Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 20),
-                    if (user != null) ...[
-                      CircleAvatar(
-                        radius: 60,
-                        backgroundImage: NetworkImage(
-                          'https://i.pravatar.cc',
-                          // 'http://192.168.100.251:8000/storage/foto/${user.photo}',
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        user.name,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        user.email,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black54,
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                    ] else ...[
-                      const Text(
-                        'Data user tidak tersedia',
-                        style: TextStyle(fontSize: 16, color: Colors.black54),
-                      ),
-                      const SizedBox(height: 40),
-                    ],
-                    Card(
-                      child: ListTile(
-                        leading: const Icon(Icons.logout),
-                        title: const Text('Logout'),
-                        onTap: () async {
-                          final confirm = await showDialog<bool>(
-                            context: context,
-                            builder:
-                                (context) => AlertDialog(
-                                  title: const Text('Konfirmasi'),
-                                  content: const Text('Yakin ingin logout?'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed:
-                                          () => Navigator.pop(context, false),
-                                      child: const Text('Batal'),
-                                    ),
-                                    TextButton(
-                                      onPressed:
-                                          () => Navigator.pop(context, true),
-                                      child: const Text('Logout'),
-                                    ),
-                                  ],
-                                ),
-                          );
-
-                          if (confirm ?? false) {
-                            final token = await SharedPrefs.getToken();
-
-                            // Jika data user ada dan token ada, panggil API logout
-                            if (snapshot.hasData &&
-                                snapshot.data != null &&
-                                token != null) {
-                              await AuthUtils.logout(token);
-                            }
-
-                            // Hapus semua SharedPreferences
-                            await SharedPrefs.clearAll();
-
-                            // Kembali ke LoginScreen
-                            if (context.mounted) {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const LoginScreen(),
-                                ),
-                              );
-                            }
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              );
+              return buildSkeletonProfile(); // ✅ Skeleton Loading
             }
 
-            return content;
+            final user = snapshot.data;
+
+            return Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+
+                  if (user != null) ...[
+                    CircleAvatar(
+                      radius: 60,
+                      backgroundImage: NetworkImage('https://i.pravatar.cc'),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      user.name,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      user.email,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                  ] else ...[
+                    const Text(
+                      'Data user tidak tersedia',
+                      style: TextStyle(fontSize: 16, color: Colors.black54),
+                    ),
+                    const SizedBox(height: 40),
+                  ],
+
+                  Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.logout),
+                      title: const Text('Logout'),
+                      onTap: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder:
+                              (context) => AlertDialog(
+                                title: const Text('Konfirmasi'),
+                                content: const Text('Yakin ingin logout?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed:
+                                        () => Navigator.pop(context, false),
+                                    child: const Text('Batal'),
+                                  ),
+                                  TextButton(
+                                    onPressed:
+                                        () => Navigator.pop(context, true),
+                                    child: const Text('Logout'),
+                                  ),
+                                ],
+                              ),
+                        );
+
+                        if (confirm ?? false) {
+                          final token = await SharedPrefs.getToken();
+                          if (snapshot.data != null && token != null) {
+                            await AuthUtils.logout(token);
+                          }
+                          await SharedPrefs.clearAll();
+                          if (context.mounted) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const LoginScreen(),
+                              ),
+                            );
+                          }
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
           },
         ),
       ),

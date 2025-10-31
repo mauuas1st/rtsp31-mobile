@@ -45,6 +45,7 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
   String _address = "Mengambil lokasi...";
   double? _latitude, _longitude;
   String? _idhe = '';
+  bool _isInitialLoading = true;
 
   final TextEditingController _loadingLocationController =
       TextEditingController();
@@ -185,6 +186,8 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
   }
 
   Future<void> _checkTodayAttendance() async {
+    setState(() => _isInitialLoading = true);
+
     final url = Uri.parse(
       "http://192.168.100.251:8000/api/v1/my-attendances/today",
     );
@@ -211,12 +214,10 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
           }).toList();
 
       if (todayAttendance.isEmpty) {
-        // Belum presensi sama sekali hari ini
         _isCheckIn = true;
         _shiftMessage = "Siap melakukan presensi hari ini?";
         labelbtn = "Presensi Masuk";
       } else {
-        // Sudah ada presensi hari ini
         todayAttendance.sort(
           (a, b) => DateTime.parse(
             b['created_at'],
@@ -225,24 +226,20 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
         final latest = todayAttendance.first;
 
         if (latest['check_out_time'] == null) {
-          // Sudah presensi masuk, tapi belum presensi keluar
           _isCheckIn = false;
           _lastAttendanceId = latest['id'];
           _shiftMessage =
               "Anda sudah presensi masuk.\nSelesaikan presensi hari ini?";
           labelbtn = "Presensi Selesai";
         } else {
-          // Sudah presensi masuk dan keluar hari ini
           _isCheckIn = true;
           _shiftMessage = "Anda sudah menyelesaikan presensi hari ini.";
           labelbtn = "Selesai";
         }
       }
-
-      setState(() {});
-    } else {
-      debugPrint("Gagal ambil data: ${response.statusCode}");
     }
+
+    if (mounted) setState(() => _isInitialLoading = false);
   }
 
   Future<void> _pickImage(bool isSelfie) async {
@@ -271,6 +268,17 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
   }
 
   Future<void> _submitAttendance() async {
+    if (_shiftMessage == "Anda sudah menyelesaikan presensi hari ini.") {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Presensi hari ini sudah selesai. Tunggu hari berikutnya ya.",
+          ),
+        ),
+      );
+      return;
+    }
+
     if (_selfiePhoto == null || _toolPhoto == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -313,11 +321,11 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
         "check_in_address": _address,
         "check_in_map_link":
             'https://www.google.com/maps?q=$_latitude,$_longitude',
-        "project_name": "Test Project",
-        "heavy_equipment_id": 'Zoiddsss', //_idhe?.toString() ?? '',
+        "project_name": "Nulllll",
+        "heavy_equipment_id": 'Nulllll', //_idhe?.toString() ?? '',
         "check_in_note": _description,
-        "loading_location": 'Mekahhhh ya mas', //_loadinglocation,
-        "unloading_location": 'Madinah ya masss', // _unloadinglocation,
+        "loading_location": 'Nulllll', //_loadinglocation,
+        "unloading_location": 'Nulllll', // _unloadinglocation,
       } else ...{
         // "check_out_time": time,
         "latitude_out": _latitude?.toString() ?? '',
@@ -349,16 +357,18 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
     setState(() => _isSubmitting = false);
 
     if (resp.statusCode == 201 || resp.statusCode == 200) {
+      _selfiePhoto = null;
+      _toolPhoto = null;
+      Navigator.pop(context, true);
+
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text("Berhasil...!")));
       }
-      _selfiePhoto = null;
-      _toolPhoto = null;
-      await _checkTodayAttendance();
-      setState(() {});
-      Navigator.pop(context);
+
+      // await _checkTodayAttendance();
+      // setState(() {});
     } else {
       if (kDebugMode) {
         print("Gagal: ${resp.body}");
@@ -389,153 +399,176 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
         backgroundColor: Colors.grey[100],
         body: RefreshIndicator(
           onRefresh: _refreshPage,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 500),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // if (_shiftMessage != null)
-                    buildCard(
-                      Center(
-                        child: Text(
-                          // _shiftMessage!,
-                          message,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
 
-                    sizedBH(2),
-
-                    buildCard(
-                      Row(
+          child:
+              _isInitialLoading
+                  ? buildCard(
+                    const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Expanded(
-                            child: buildPhotoBox(
-                              "Foto Selfie",
-                              _selfiePhoto,
-                              () => _pickImage(true),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: buildPhotoBox(
-                              "Foto Sekitar",
-                              _toolPhoto,
-                              () => _pickImage(false),
-                            ),
-                          ),
+                          CircularProgressIndicator(),
+                          SizedBox(height: 8),
+                          Text("Memuat data presensi..."),
                         ],
                       ),
                     ),
-
-                    sizedBH(2),
-
-                    // ........
-                    // buildCard(
-                    //   Padding(
-                    //     padding: const EdgeInsets.all(12),
-                    //     child: Column(
-                    //       children: [
-                    //         SizedBox(
-                    //           width: double.infinity,
-                    //           child: ElevatedButton.icon(
-                    //             onPressed: () async {
-                    //               final result = await Navigator.push(
-                    //                 context,
-                    //                 MaterialPageRoute(
-                    //                   builder: (context) => QrScanPage(),
-                    //                 ),
-                    //               );
-                    //               if (result != null && result is String) {
-                    //                 _handleQrResult(result);
-                    //               }
-                    //             },
-                    //             style: ElevatedButton.styleFrom(
-                    //               backgroundColor: Colors.white,
-                    //               foregroundColor: Colors.black,
-                    //               elevation: 2,
-                    //               side: const BorderSide(color: Colors.grey),
-                    //               padding: const EdgeInsets.symmetric(
-                    //                 horizontal: 16,
-                    //                 vertical: 16,
-                    //               ),
-                    //               shape: RoundedRectangleBorder(
-                    //                 borderRadius: BorderRadius.circular(8),
-                    //               ),
-                    //             ),
-                    //             icon: const Icon(Icons.qr_code_scanner),
-                    //             label: const Text("Scan QR ID Kendaraan"),
-                    //           ),
-                    //         ),
-                    //         sizedBH(4),
-                    //         const Text(
-                    //           "Atau",
-                    //           style: TextStyle(
-                    //             fontWeight: FontWeight.bold,
-                    //             fontSize: 16,
-                    //           ),
-                    //           textAlign: TextAlign.center,
-                    //         ),
-                    //         sizedBH(4),
-                    //         SizedBox(
-                    //           width: double.infinity,
-                    //           child: TextField(
-                    //             controller: _equipmentController,
-                    //             decoration: const InputDecoration(
-                    //               labelText: "Masukkan ID Kendaraan",
-                    //               border: OutlineInputBorder(),
-                    //             ),
-                    //             onChanged: (val) => _equipmentId = val,
-                    //           ),
-                    //         ),
-                    //       ],
-                    //     ),
-                    //   ),
-                    // ),
-
-                    // sizedBH(2),
-                    buildCard(
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          left: 6,
-                          right: 6,
-                          top: 2,
-                          bottom: 2,
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  )
+                  : SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 500),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            const Icon(Icons.location_pin),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: _openGoogleMaps,
-                                child: Column(
+                            // if (_shiftMessage != null)
+                            buildCard(
+                              Center(
+                                child: Text(
+                                  // _shiftMessage!,
+                                  message,
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+
+                            sizedBH(2),
+
+                            buildCard(
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: buildPhotoBox(
+                                      "Foto Selfie",
+                                      _selfiePhoto,
+                                      () => _pickImage(true),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: buildPhotoBox(
+                                      "Foto Sekitar",
+                                      _toolPhoto,
+                                      () => _pickImage(false),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            sizedBH(2),
+
+                            // ........
+                            // buildCard(
+                            //   Padding(
+                            //     padding: const EdgeInsets.all(12),
+                            //     child: Column(
+                            //       children: [
+                            //         SizedBox(
+                            //           width: double.infinity,
+                            //           child: ElevatedButton.icon(
+                            //             onPressed: () async {
+                            //               final result = await Navigator.push(
+                            //                 context,
+                            //                 MaterialPageRoute(
+                            //                   builder: (context) => QrScanPage(),
+                            //                 ),
+                            //               );
+                            //               if (result != null && result is String) {
+                            //                 _handleQrResult(result);
+                            //               }
+                            //             },
+                            //             style: ElevatedButton.styleFrom(
+                            //               backgroundColor: Colors.white,
+                            //               foregroundColor: Colors.black,
+                            //               elevation: 2,
+                            //               side: const BorderSide(color: Colors.grey),
+                            //               padding: const EdgeInsets.symmetric(
+                            //                 horizontal: 16,
+                            //                 vertical: 16,
+                            //               ),
+                            //               shape: RoundedRectangleBorder(
+                            //                 borderRadius: BorderRadius.circular(8),
+                            //               ),
+                            //             ),
+                            //             icon: const Icon(Icons.qr_code_scanner),
+                            //             label: const Text("Scan QR ID Kendaraan"),
+                            //           ),
+                            //         ),
+                            //         sizedBH(4),
+                            //         const Text(
+                            //           "Atau",
+                            //           style: TextStyle(
+                            //             fontWeight: FontWeight.bold,
+                            //             fontSize: 16,
+                            //           ),
+                            //           textAlign: TextAlign.center,
+                            //         ),
+                            //         sizedBH(4),
+                            //         SizedBox(
+                            //           width: double.infinity,
+                            //           child: TextField(
+                            //             controller: _equipmentController,
+                            //             decoration: const InputDecoration(
+                            //               labelText: "Masukkan ID Kendaraan",
+                            //               border: OutlineInputBorder(),
+                            //             ),
+                            //             onChanged: (val) => _equipmentId = val,
+                            //           ),
+                            //         ),
+                            //       ],
+                            //     ),
+                            //   ),
+                            // ),
+
+                            // sizedBH(2),
+                            buildCard(
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  left: 6,
+                                  right: 6,
+                                  top: 2,
+                                  bottom: 2,
+                                ),
+                                child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      _address,
-                                      style: const TextStyle(fontSize: 14),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Align(
-                                      alignment: Alignment.centerRight,
+                                    const Icon(Icons.location_pin),
+                                    const SizedBox(width: 8),
+                                    Expanded(
                                       child: GestureDetector(
                                         onTap: _openGoogleMaps,
-                                        child: const Text(
-                                          'lihat lokasi saat ini',
-                                          style: TextStyle(
-                                            color: Colors.blue,
-                                            fontSize: 13,
-                                          ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              _address,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Align(
+                                              alignment: Alignment.centerRight,
+                                              child: GestureDetector(
+                                                onTap: _openGoogleMaps,
+                                                child: const Text(
+                                                  'lihat lokasi saat ini',
+                                                  style: TextStyle(
+                                                    color: Colors.blue,
+                                                    fontSize: 13,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ),
@@ -543,12 +576,8 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
                                 ),
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
 
-                    /*      sizedBH(2),
+                            /*      sizedBH(2),
 
                     buildCard(
                       Center(
@@ -608,33 +637,33 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
                         ),
                       ),
                     ), */
-                    sizedBH(2),
+                            sizedBH(2),
 
-                    buildCard(
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          left: 6,
-                          right: 6,
-                          top: 2,
-                          bottom: 2,
-                        ),
-                        child: TextField(
-                          decoration: const InputDecoration(
-                            labelText: "Keterangan",
-                            border: OutlineInputBorder(),
-                          ),
-                          maxLines: 4,
-                          onChanged: (v) => _description = v,
+                            buildCard(
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  left: 6,
+                                  right: 6,
+                                  top: 2,
+                                  bottom: 2,
+                                ),
+                                child: TextField(
+                                  decoration: const InputDecoration(
+                                    labelText: "Keterangan",
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  maxLines: 4,
+                                  onChanged: (v) => _description = v,
+                                ),
+                              ),
+                            ),
+
+                            sizedBH(2),
+                          ],
                         ),
                       ),
                     ),
-
-                    sizedBH(2),
-                  ],
-                ),
-              ),
-            ),
-          ),
+                  ),
         ),
         bottomNavigationBar: Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
@@ -663,7 +692,12 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      onPressed: _submitAttendance,
+                      onPressed:
+                          (_shiftMessage ==
+                                  "Anda sudah menyelesaikan presensi hari ini.")
+                              ? null
+                              : _submitAttendance,
+
                       // icon: const Icon(Icons.send, color: Colors.white),
                       label: Text(
                         labelbtn!,

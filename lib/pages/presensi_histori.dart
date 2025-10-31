@@ -110,6 +110,10 @@ class _PresensiHistoriState extends State<PresensiHistori> {
 
     await fetchFirstAttendance();
     await fetchAttendances(isRefresh: true);
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -120,7 +124,7 @@ class _PresensiHistoriState extends State<PresensiHistori> {
         body: Column(
           children: [
             // ---------------- Top Card ----------------
-            buildTopCard(context, firstItem),
+            buildTopCard(context, firstItem, refreshData),
 
             const SizedBox(height: 12),
 
@@ -165,18 +169,19 @@ class _PresensiHistoriState extends State<PresensiHistori> {
                                   );
                                 } else if (!isLoading && attendances.isEmpty) {
                                   // ---------------- Belum ada data ----------------
-                                  return Center(
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: const [
-                                        Icon(
-                                          Icons.history,
-                                          size: 48,
-                                          color: Colors.grey,
-                                        ),
-                                        SizedBox(height: 12),
-                                        Text(
+                                  return ListView(
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    children: [
+                                      SizedBox(height: 120),
+                                      Icon(
+                                        Icons.history,
+                                        size: 48,
+                                        color: Colors.grey,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Center(
+                                        child: Text(
                                           "Belum ada kehadiran",
                                           style: TextStyle(
                                             color: Colors.grey,
@@ -184,8 +189,8 @@ class _PresensiHistoriState extends State<PresensiHistori> {
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   );
                                 } else {
                                   // ---------------- Data ada + infinite scroll ----------------
@@ -303,7 +308,11 @@ class _PresensiHistoriState extends State<PresensiHistori> {
 }
 
 // ---------------- TopCardWidget ----------------
-Widget buildTopCard(BuildContext context, PresensiModel? firstItem) {
+Widget buildTopCard(
+  BuildContext context,
+  PresensiModel? firstItem,
+  VoidCallback onRefresh,
+) {
   final now = DateTime.now();
   final checkInTime = firstItem?.checkInTime ?? now;
   final checkOutTime = firstItem?.checkOutTime ?? now;
@@ -370,11 +379,21 @@ Widget buildTopCard(BuildContext context, PresensiModel? firstItem) {
                       textAlign: TextAlign.center,
                     ),
                     onTap: () {
-                      Navigator.of(context).push(
+                      // Navigator.of(context).push(
+                      //   MaterialPageRoute(
+                      //     builder: (context) => const AttendancePageCopy(),
+                      //   ),
+                      // );
+                      Navigator.push(
+                        context,
                         MaterialPageRoute(
                           builder: (context) => const AttendancePageCopy(),
                         ),
-                      );
+                      ).then((result) {
+                        if (result == true) {
+                          onRefresh(); // ✅ panggil callback
+                        }
+                      });
                     },
                   ),
                 ),
