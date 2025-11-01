@@ -188,9 +188,7 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
   Future<void> _checkTodayAttendance() async {
     setState(() => _isInitialLoading = true);
 
-    final url = Uri.parse(
-      "http://192.168.100.251:8000/api/v1/my-attendances/today",
-    );
+    final url = Uri.parse("https://rtsp31.site/api/v1/my-attendances/today");
     final token = await SharedPrefs.getToken();
     final response = await http.get(
       url,
@@ -293,8 +291,8 @@ class _AttendancePageCopyState extends State<AttendancePageCopy> {
     final token = await SharedPrefs.getToken();
     final uri = Uri.parse(
       _isCheckIn
-          ? "http://192.168.100.251:8000/api/v1/my-attendances/check-in"
-          : "http://192.168.100.251:8000/api/v1/my-attendances/check-out",
+          ? "https://rtsp31.site/api/v1/my-attendances/check-in"
+          : "https://rtsp31.site/api/v1/my-attendances/check-out",
     );
 
     final request = http.MultipartRequest('POST', uri);

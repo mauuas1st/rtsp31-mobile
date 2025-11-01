@@ -41,9 +41,7 @@ class _PresensiHistoriState extends State<PresensiHistori> {
   Future<void> fetchFirstAttendance() async {
     final token = await SharedPrefs.getToken();
     final response = await http.get(
-      Uri.parse(
-        'http://192.168.100.251:8000/api/v1/my-attendances/today?page=1',
-      ),
+      Uri.parse('https://rtsp31.site/api/v1/my-attendances/today?page=1'),
       headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
     );
 
@@ -69,7 +67,7 @@ class _PresensiHistoriState extends State<PresensiHistori> {
       final token = await SharedPrefs.getToken();
       final response = await http.get(
         Uri.parse(
-          'http://192.168.100.251:8000/api/v1/my-attendances/today?page=$currentPage',
+          'https://rtsp31.site/api/v1/my-attendances/today?page=$currentPage',
         ),
         headers: {
           'Authorization': 'Bearer $token',
